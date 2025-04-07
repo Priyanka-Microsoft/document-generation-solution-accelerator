@@ -210,7 +210,7 @@ jobs:
           
           for resource in "${resources_to_purge[@]}"; do
             echo "Purging resource: $resource"
-            if ! az resource delete --ids /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/providers/Microsoft.CognitiveServices/locations/uksouth/deletedAccounts/$resource --verbose; then
+            if ! az resource delete --ids /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/providers/Microsoft.CognitiveServices/locations/${{ env.AZURE_LOCATION }}/deletedAccounts/$resource --verbose; then
               echo "Failed to purge resource: $resource"
             else
               echo "Purged the resource: $resource"
