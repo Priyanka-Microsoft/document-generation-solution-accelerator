@@ -142,10 +142,7 @@ jobs:
 
            # Extract AI Services names
           echo "Fetching AI Services..."
-          AI_SERVICES=$(az resource list --resource-group 'rg-psl-cwyd-gpt4turbo1' --resource-type "Microsoft.CognitiveServices/accounts" --query "[].name" -o tsv)
-
-          echo "Raw AI Services:"
-          echo "$AI_SERVICES"
+          AI_SERVICES=$(az resource list --resource-group '${{ env.RESOURCE_GROUP_NAME }}' --resource-type "Microsoft.CognitiveServices/accounts" --query "[].name" -o tsv)
 
           # Flatten newline-separated values to space-separated
           AI_SERVICES=$(echo "$AI_SERVICES" | paste -sd ' ' -)
@@ -174,22 +171,11 @@ jobs:
         run: |
           echo "Waiting for all deployed resources (including AI Services) to be deleted..."
 
-          # Static list of known resources
-          static_resources=(
-            "aoai-${{ env.SOLUTION_PREFIX }}"
-            "appins-${{ env.SOLUTION_PREFIX }}"
-            "db-cosmos-${{ env.SOLUTION_PREFIX }}"
-            "${{ env.SOLUTION_PREFIX }}-plan"
-            "search-${{ env.SOLUTION_PREFIX }}"
-            "webapp-${{ env.SOLUTION_PREFIX }}"
-            "worksp-${{ env.SOLUTION_PREFIX }}"
-          )
-
           # Convert AI_SERVICES space-separated string into an array
           IFS=' ' read -r -a ai_services_array <<< "${{ env.AI_SERVICES }}"
 
           # Combine both arrays
-          resources_to_check=("${static_resources[@]}" "${ai_services_array[@]}")
+          resources_to_check=("${ai_services_array[@]}")
 
           echo "Resources to check for deletion:"
           printf '%s\n' "${resources_to_check[@]}"
