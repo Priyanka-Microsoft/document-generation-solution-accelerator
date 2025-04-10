@@ -139,11 +139,19 @@ jobs:
           echo "Detected Key Vault: $KEYVAULT_NAME"
           echo "KEYVAULT_NAME=$KEYVAULT_NAME" >> $GITHUB_ENV
       
+
            # Extract AI Services names
-          AI_SERVICES=$(az resource list \
+          echo "Fetching AI Services..."
+          RAW_AI_SERVICES=$(az resource list \
             --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
             --resource-type "Microsoft.CognitiveServices/accounts" \
-            --query "[].name" -o tsv | paste -sd " " -)
+            --query "[].name" -o tsv)
+
+          echo "Raw AI Services:"
+          echo "$RAW_AI_SERVICES"
+
+          # Flatten newline-separated values to space-separated
+          AI_SERVICES=$(echo "$RAW_AI_SERVICES" | paste -sd ' ' -)
 
           echo "Detected AI Services: $AI_SERVICES"
           echo "AI_SERVICES=$AI_SERVICES" >> $GITHUB_ENV
