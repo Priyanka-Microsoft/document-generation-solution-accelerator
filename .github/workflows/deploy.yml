@@ -139,10 +139,12 @@ jobs:
           echo "Detected Key Vault: $KEYVAULT_NAME"
           echo "KEYVAULT_NAME=$KEYVAULT_NAME" >> $GITHUB_ENV
       
-          # Get AI Services names and convert them into a space-separated string
-          AI_SERVICES=$(az resource list --resource-group "${{ env.RESOURCE_GROUP_NAME }}" --resource-type "Microsoft.CognitiveServices/accounts" --query "[].name" -o tsv)
-          
-          AI_SERVICES=$(echo "$AI_SERVICES" | tr '\n' ' ')
+           # Extract AI Services names
+          AI_SERVICES=$(az resource list \
+            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
+            --resource-type "Microsoft.CognitiveServices/accounts" \
+            --query "[].name" -o tsv | paste -sd " " -)
+
           echo "Detected AI Services: $AI_SERVICES"
           echo "AI_SERVICES=$AI_SERVICES" >> $GITHUB_ENV
       
@@ -165,8 +167,10 @@ jobs:
 
       - name: Wait for Resource Deletion to Complete
         run: |
-          # List of resources to check based on SOLUTION_PREFIX
-          resources_to_check=(
+          echo "Waiting for all deployed resources (including AI Services) to be deleted..."
+
+          # Static list of known resources
+          static_resources=(
             "aoai-${{ env.SOLUTION_PREFIX }}"
             "appins-${{ env.SOLUTION_PREFIX }}"
             "db-cosmos-${{ env.SOLUTION_PREFIX }}"
@@ -176,42 +180,49 @@ jobs:
             "worksp-${{ env.SOLUTION_PREFIX }}"
           )
 
-          # Get the list of resources in YAML format
-          resource_list=$(az resource list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --output yaml)
-          
-          # Maximum number of retries and retry intervals
+          # Convert AI_SERVICES space-separated string into an array
+          IFS=' ' read -r -a ai_services_array <<< "${{ env.AI_SERVICES }}"
+
+          # Combine both arrays
+          resources_to_check=("${static_resources[@]}" "${ai_services_array[@]}")
+
+          echo "Resources to check for deletion:"
+          printf '%s\n' "${resources_to_check[@]}"
+
+          # Get the current resource list in YAML
+          resource_list=$(az resource list --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --output yaml)
+
+          # Set up retry logic
           max_retries=3
           retry_intervals=(30 60 120)
           retries=0
-          
+
           while true; do
             resource_found=false
-            # Iterate through the resources to check
             for resource in "${resources_to_check[@]}"; do
-              echo "Checking resource: $resource"
+              echo "Checking if resource '$resource' still exists..."
               if echo "$resource_list" | grep -q "name: $resource"; then
-                echo "Resource '$resource' exists in the subscription."
+                echo "Resource '$resource' still exists."
                 resource_found=true
               else
-                echo "Resource '$resource' does not exist in the subscription."
+                echo "Resource '$resource' has been deleted."
               fi
             done
 
-            # If any resource exists, retry
             if [ "$resource_found" = true ]; then
               retries=$((retries + 1))
               if [ "$retries" -ge "$max_retries" ]; then
-                echo "Maximum retry attempts reached. Exiting."
+                echo "Reached max retry attempts. Exiting wait loop."
                 break
               else
-                echo "Waiting for ${retry_intervals[$retries-1]} seconds before retrying..."
-                sleep ${retry_intervals[$retries-1]}
+                echo "Some resources still exist. Waiting for ${retry_intervals[$((retries-1))]} seconds..."
+                sleep "${retry_intervals[$((retries-1))]}"
+                resource_list=$(az resource list --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --output yaml)
               fi
             else
-              echo "No resources found. Exiting."
+              echo "All resources have been deleted."
               break
             fi
-          done
 
       - name: Wait for Soft Deletion of Key Vault and AI Services
         if: always()
