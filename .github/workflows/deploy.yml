@@ -142,16 +142,13 @@ jobs:
 
            # Extract AI Services names
           echo "Fetching AI Services..."
-          RAW_AI_SERVICES=$(az resource list \
-            --resource-group "${{ env.RESOURCE_GROUP_NAME }}" \
-            --resource-type "Microsoft.CognitiveServices/accounts" \
-            --query "[].name" --output tsv)
+          AI_SERVICES=$(az resource list --resource-group 'rg-psl-cwyd-gpt4turbo1' --resource-type "Microsoft.CognitiveServices/accounts" --query "[].name" -o tsv)
 
           echo "Raw AI Services:"
-          echo "$RAW_AI_SERVICES"
+          echo "$AI_SERVICES"
 
           # Flatten newline-separated values to space-separated
-          AI_SERVICES=$(echo "$RAW_AI_SERVICES" | paste -sd ' ' -)
+          AI_SERVICES=$(echo "$AI_SERVICES" | paste -sd ' ' -)
 
           echo "Detected AI Services: $AI_SERVICES"
           echo "AI_SERVICES=$AI_SERVICES" >> $GITHUB_ENV
