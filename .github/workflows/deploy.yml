@@ -142,7 +142,7 @@ jobs:
           # Get AI Services names and convert them into a space-separated string
           AI_SERVICES=$(az resource list --resource-group ${{ env.RESOURCE_GROUP_NAME }} --resource-type "Microsoft.CognitiveServices/accounts" --query "[].name" -o tsv)
           
-          AI_SERVICES=$(echo "$AI_SERVICES" | tr '\n' ' ')
+          # AI_SERVICES=$(echo "$AI_SERVICES" | tr '\n' ' ')
           echo "Detected AI Services: $AI_SERVICES"
           echo "AI_SERVICES=$AI_SERVICES" >> $GITHUB_ENV
       
