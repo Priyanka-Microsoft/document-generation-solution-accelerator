@@ -271,7 +271,7 @@ jobs:
 
           # --- Purge Key Vaults ---
           echo "Starting purge for Key Vaults..."
-          IFS=' ' read -r -a VAULTS <<< "${{ env.KEY_VAULTS }}"
+          IFS=' ' read -r -a VAULTS <<< "${{ env.KEYVAULT_NAME }}"
 
           for VAULT in "${VAULTS[@]}"; do
             echo "Checking location for Key Vault: $VAULT"
