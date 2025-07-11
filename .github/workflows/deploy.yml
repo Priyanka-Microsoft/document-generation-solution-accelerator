@@ -148,6 +148,7 @@ jobs:
                 gptDeploymentCapacity=${{ env.GPT_MIN_CAPACITY }} \
                 embeddingModel="text-embedding-ada-002" \
                 embeddingDeploymentCapacity=${{ env.TEXT_EMBEDDING_MIN_CAPACITY }} \
+                aiDeploymentsLocation=${{ env.AZURE_LOCATION }} \
                 imageTag="${IMAGE_TAG}"
 
       - name: Get Deployment Output and extract Values
