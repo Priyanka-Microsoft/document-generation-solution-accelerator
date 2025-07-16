@@ -26,7 +26,7 @@ jobs:
       RESOURCE_GROUP_NAME: ${{ steps.check_create_rg.outputs.RESOURCE_GROUP_NAME }}
       WEBAPP_URL: ${{ steps.get_output.outputs.WEBAPP_URL }}
     steps:
-      - name: Checkout Code
+      - name: Checkout Codee
         uses: actions/checkout@v3
 
       - name: Setup Azure CLI
